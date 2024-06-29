@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>InTeam</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+
+      .voteButton { display: none; padding: 0.5rem 1rem; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" value="Create a script in js that prints out the Fibonacci Sequence" autocomplete="off" /><button>Send</button>
+    </form>
+    <div id="divVotes"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      const messages = document.getElementById('messages');
+      
+      const divVotes = document.getElementById('divVotes');
+      
+      let messageCount1 = 0;
+      let messageCount2 = 0;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        if(input.value){
+          socket.emit('chat message', input.value);
+          input.value = '';
+        }
+      });
+
+      socket.on('chat message', (msg) => {
+        const item = document.createElement('li');
+        item.textContent = msg;
+
+        messages.appendChild(item);
+
+        console.log(typeof messages.childNodes);
+        console.log(messages.childNodes);
+
+        if(messages.childNodes.length === 2){
+          const voteButton1 = document.createElement('button');
+          voteButton1.id = "voteButton1";
+          voteButton1.textContent = "voteButton1";
+          const voteCount1 = document.createElement('span');
+          voteCount1.id = "voteCount1";
+          voteCount1.textContent = "0";
+
+          const voteButton2 = document.createElement('button');
+          voteButton2.id = "voteButton2";
+          voteButton2.textContent = "voteButton2";
+          const voteCount2 = document.createElement('span');
+          voteCount2.id = "voteCount2";
+          voteCount2.textContent = "0";
+          
+
+          divVotes.appendChild(voteButton1);
+          divVotes.appendChild(voteCount1);
+          divVotes.appendChild(voteButton2);
+          divVotes.appendChild(voteCount2);
+
+
+          voteButton1.onclick = () => {
+            //console.log("vote1");
+            socket.emit('vote', 1);
+          };
+
+
+          voteButton2.onclick = () => {
+            //console.log("vote2");
+            socket.emit('vote', 2);
+          };
+        }   
+
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      socket.on('vote count', (votes) => {
+        const buttons = document.querySelectorAll('#messages button');
+        buttons.forEach((button, index) => {
+            const option = 'option' + (index + 1);
+            button.nextSibling.textContent = `${votes[option]} votes`;
+        });
+      });
+
+      socket.on('final action', (msg) => {
+        alert(msg);
+      });
+
+
+
+    </script>
+  </body>
+</html>
